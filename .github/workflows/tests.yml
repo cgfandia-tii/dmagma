@@ -1,0 +1,29 @@
+name: tests
+on: 
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+jobs:
+  test-integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        name: Check out repository
+        with:
+          submodules: recursive
+      - name: Build and setup test stack
+        run: |
+          docker compose up -d tasks-broker tasks-result s3 fuzzing-worker general-worker
+          cd src
+          pip install -r requirements.txt -r requirements.dev.txt
+      - name: Test services
+        run: |
+          cd src
+          pytest -m "not celery"
+      - name: Test tasks
+        run: |
+          cd src
+          pytest -m "celery"
+      - name: Show logs
+        run: docker compose logs

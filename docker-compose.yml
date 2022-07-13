@@ -1,10 +1,9 @@
 version: '3.8'
 
 services:
-  backend-worker:
+  fuzzing-worker:
     build: src
-    image: dmagma-fuzz-backend
-    container_name: backend-worker
+    image: dmagma-worker
     environment:
       SHARED_VOLUME: ${SHARED_VOLUME}
       SHARED_PATH: ${SHARED_PATH}
@@ -13,20 +12,35 @@ services:
       BROKER_USER: ${BROKER_USER}
       BROKER_PASS: ${BROKER_PASS}
       REDIS_HOST: tasks-result
-      S3_ENDPOINT: s3
+      S3_ENDPOINT: http://s3:9000
       S3_ACCESS_KEY: ${S3_ACCESS_KEY}
       S3_SECRET_KEY: ${S3_SECRET_KEY}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${SHARED_VOLUME}:${SHARED_PATH}
-    command: ./run-fuzzing-worker.sh
+    command: /bin/sh -c ./run-fuzzing-worker.sh
+    depends_on:
+      - tasks-broker
+      - tasks-result
+
+  general-worker:
+    build: src
+    image: dmagma-worker
+    environment:
+      BROKER_HOST: tasks-broker
+      BROKER_USER: ${BROKER_USER}
+      BROKER_PASS: ${BROKER_PASS}
+      REDIS_HOST: tasks-result
+      S3_ENDPOINT: http://s3:9000
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+    command: /bin/sh -c ./run-general-worker.sh
     depends_on:
       - tasks-broker
       - tasks-result
 
   tasks-broker:
     image: rabbitmq:3.9-management-alpine
-    container_name: tasks-broker
     ports:
       - '15672:15672'
       - '5672:5672'
@@ -36,13 +50,11 @@ services:
 
   tasks-result:
     image: redis:alpine
-    container_name: tasks-result
     ports:
       - '6379:6379'
 
   tasks-monitor:
     image: mher/flower
-    container_name: tasks-monitor
     ports:
       - '5555:5555'
     environment:
@@ -54,7 +66,6 @@ services:
 
   s3:
     image: minio/minio
-    container_name: s3
     ports:
       - '9000:9000'
       - '9001:9001'
