@@ -1,0 +1,3 @@
+[submodule "src/magma"]
+	path = src/magma
+	url = https://github.com/cgfandia-tii/magma.git
