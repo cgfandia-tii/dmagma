@@ -6,6 +6,13 @@ on:
     branches: [ main ]
 jobs:
   test-integration:
+    environment: 
+      SHARED_VOLUME: shared-workdir-volume
+      SHARED_PATH: /shared-workdir
+      BROKER_USER: guest
+      BROKER_PASS: guest
+      S3_ACCESS_KEY: access_key
+      S3_SECRET_KEY: secret_key
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -26,4 +33,5 @@ jobs:
           cd src
           pytest -m "celery"
       - name: Show logs
+        if: ${{ always() }}
         run: docker compose logs
