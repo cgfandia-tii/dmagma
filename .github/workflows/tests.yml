@@ -13,10 +13,10 @@ env:
   BROKER_PASS: guest
   S3_ACCESS_KEY: access_key
   S3_SECRET_KEY: secret_key
-  CLEAR_CACHE: 1 
 
 jobs:
   run-tests:
+    name: Run tests
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
@@ -45,7 +45,7 @@ jobs:
       - name: Test tasks
         run: |
           cd src
-          pytest -vvv -m "celery"
+          CLEAR_CACHE=1 pytest -vvv -m "celery" --cov backend --cov-report=xml --cov-append
 
       - name: Show logs
         if: ${{ failure() }}

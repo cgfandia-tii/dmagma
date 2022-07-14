@@ -1,5 +1,7 @@
 # dMagma
 ![tests](https://github.com/cgfandia-tii/dmagma/actions/workflows/tests.yml/badge.svg)
+![lint](https://github.com/cgfandia-tii/dmagma/actions/workflows/lint.yml/badge.svg)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![codecov](https://codecov.io/gh/cgfandia-tii/dmagma/branch/main/graph/badge.svg?token=8CD0PUW0GD)](https://codecov.io/gh/cgfandia-tii/dmagma)
 
 Distributed Magma fuzzing benchmark
