@@ -19,8 +19,10 @@ def s3(clear_cache) -> storage.S3Storage:
 
 
 @pytest.fixture
-def dummy_file() -> Callable[[pytest.TempPathFactory], Generator[pathlib.Path, None, None]]:
-    def dummy(tmp_path_factory: pytest.TempPathFactory) -> Generator[pathlib.Path, None, None]:
+def dummy_file() -> Callable[[pytest.TempPathFactory],
+                             Generator[pathlib.Path, None, None]]:
+    def dummy(tmp_path_factory: pytest.TempPathFactory) -> \
+            Generator[pathlib.Path, None, None]:
         while True:
             file = tmp_path_factory.mktemp(__name__) / 'dummy-file'
             with open(file.absolute(), 'wt') as fd:

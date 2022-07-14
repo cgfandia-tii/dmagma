@@ -2,7 +2,6 @@ import logging
 import pathlib
 import tarfile
 import uuid
-from os import getenv
 from typing import Callable, Generator
 
 import pytest
@@ -47,7 +46,8 @@ def fuzzer_image(fuzzer, target) -> str:
 
 
 @pytest.fixture
-def fuzzer_results(fuzzer_image, fuzzer, target, program) -> Callable[[pathlib.Path], pathlib.Path]:
+def fuzzer_results(fuzzer_image, fuzzer, target, program) -> \
+        Callable[[pathlib.Path], pathlib.Path]:
     def dummy(results_dir: pathlib.Path) -> pathlib.Path:
         workdir, shared = service.get_workdir_and_shared(results_dir)
         utils.cleanup_folder(workdir)
@@ -73,11 +73,14 @@ def reports_storage(clear_cache) -> storage.Storage:
 
 
 @pytest.fixture
-def fuzz_pipeline(results_storage, campaign_id, tmp_path_factory) -> Callable[[str, str, str, str], str]:
+def fuzz_pipeline(results_storage, campaign_id, tmp_path_factory) -> \
+        Callable[[str, str, str, str], str]:
     def dummy(pipeline_id: str, fuzzer: str, target: str, program: str):
-        workdir, shared = service.get_workdir_and_shared(tmp_path_factory.mktemp(f'workdir-{pipeline_id}'))
-        return service.run_fuzz_pipeline(campaign_id, pipeline_id, fuzzer, target, program, shared, workdir, POLL,
-                                         TIMEOUT, results_storage)
+        workdir, shared = service.get_workdir_and_shared(
+            tmp_path_factory.mktemp(f'workdir-{pipeline_id}'))
+        return service.run_fuzz_pipeline(campaign_id, pipeline_id, fuzzer,
+                                         target, program, shared, workdir,
+                                         POLL, TIMEOUT, results_storage)
     return dummy
 
 
@@ -103,15 +106,20 @@ def test_pack(fuzzer_results, tmp_path_factory):
         assert len(tar.getmembers())
 
 
-def test_run_fuzz_pipeline(results_storage, campaign_id, pipeline_id, fuzzer, target, program, tmp_path_factory):
-    workdir, shared = service.get_workdir_and_shared(tmp_path_factory.mktemp('workdir'))
-    tar = service.run_fuzz_pipeline(campaign_id, next(pipeline_id()), fuzzer, target, program, shared, workdir,
+def test_run_fuzz_pipeline(results_storage, campaign_id, pipeline_id, fuzzer,
+                           target, program, tmp_path_factory):
+    workdir, shared = service.get_workdir_and_shared(
+        tmp_path_factory.mktemp('workdir'))
+    tar = service.run_fuzz_pipeline(campaign_id, next(pipeline_id()), fuzzer,
+                                    target, program, shared, workdir,
                                     POLL, TIMEOUT, results_storage)
-    results_file = tmp_path_factory.mktemp('fuzz-results') / pathlib.Path(tar).name
+    results_file = tmp_path_factory.mktemp(
+        'fuzz-results') / pathlib.Path(tar).name
     results_storage.get(tar, results_file)
 
 
-def test_reduce(results_storage, reports_storage, fuzz_pipeline, campaign_id, pipeline_id, fuzzer, target, program):
+def test_reduce(results_storage, reports_storage, fuzz_pipeline, campaign_id,
+                pipeline_id, fuzzer, target, program):
     fuzz_pipeline(next(pipeline_id()), fuzzer, target, program)
     fuzz_pipeline(next(pipeline_id()), fuzzer, target, program)
     service.reduce(campaign_id, results_storage, reports_storage)

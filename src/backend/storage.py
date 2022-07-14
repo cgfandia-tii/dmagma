@@ -10,11 +10,13 @@ from backend import config, exceptions
 
 class StorageException(exceptions.BackendException):
     """Basic storage exception"""
+
     pass
 
 
 class NotFoundException(StorageException):
     """Storage not found exception"""
+
     pass
 
 
@@ -37,6 +39,7 @@ class Storage:
 
 class S3StorageException(StorageException):
     """S3(boto3) errors wrapper"""
+
     pass
 
 
@@ -49,26 +52,37 @@ def boto_errors_handler(func):
         try:
             return func(*args, **kwargs)
         except ClientError as e:
-            error = e.response.get('Error', None)
+            error = e.response.get("Error", None)
             if error:
-                message = error.get('Message', None)
-                if message == 'Not Found':
+                message = error.get("Message", None)
+                if message == "Not Found":
                     raise S3NotFoundException()
             raise S3StorageException(str(e))
         except BotoCoreError as e:
             raise S3StorageException(str(e))
+
     return wrapper
 
 
 class S3Storage(Storage):
-    def __init__(self, endpoint: str, access_key: str, secret_key: str, region: str, bucket: str, max_retries: int = 5):
-        self._s3 = boto3.resource('s3',
-                                  endpoint_url=endpoint,
-                                  aws_access_key_id=access_key,
-                                  aws_secret_access_key=secret_key,
-                                  config=Config(signature_version='s3v4',
-                                                retries={'max_attempts': max_retries, 'mode': 'standard'}),
-                                  region_name=region)
+    def __init__(
+        self,
+        endpoint: str,
+        access_key: str,
+        secret_key: str,
+        region: str,
+        bucket: str,
+        max_retries: int = 5,
+    ):
+        retries = {"max_attempts": max_retries, "mode": "standard"}
+        self._s3 = boto3.resource(
+            "s3",
+            endpoint_url=endpoint,
+            aws_access_key_id=access_key,
+            aws_secret_access_key=secret_key,
+            config=Config(signature_version="s3v4", retries=retries),
+            region_name=region,
+        )
         self._bucket = bucket
         self._bucket_created = False
 
@@ -88,8 +102,10 @@ class S3Storage(Storage):
         if not self._bucket_created:
             try:
                 self._s3.create_bucket(Bucket=self.bucket)
-            except (self._s3.meta.client.exceptions.BucketAlreadyOwnedByYou,
-                    self._s3.meta.client.exceptions.BucketAlreadyExists):
+            except (
+                self._s3.meta.client.exceptions.BucketAlreadyOwnedByYou,
+                self._s3.meta.client.exceptions.BucketAlreadyExists,
+            ):
                 pass
             self._bucket_created = True
         self._s3.meta.client.upload_file(str(file.absolute()), self.bucket, key)
@@ -120,4 +136,10 @@ class S3Storage(Storage):
 
 
 def s3_factory(bucket: str) -> S3Storage:
-    return S3Storage(config.S3_ENDPOINT, config.S3_ACCESS_KEY, config.S3_SECRET_KEY, config.S3_REGION, bucket)
+    return S3Storage(
+        config.S3_ENDPOINT,
+        config.S3_ACCESS_KEY,
+        config.S3_SECRET_KEY,
+        config.S3_REGION,
+        bucket,
+    )

@@ -1,0 +1,34 @@
+name: lint
+
+on: 
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  checks: write
+  contents: write
+
+jobs:
+  run-linters:
+    name: Run linters
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+        name: Check out repository
+
+      - name: Install Python dependencies
+        run: |
+          cd src
+          pip install -r requirements.txt -r requirements.dev.txt
+
+      - name: Run linters
+        uses: wearerequired/lint-action@v2
+        with:
+          auto_fix: true
+          black: true
+          black_auto_fix: true
+          flake8: true
+          flake8_auto_fix: false
+          flake8_args: "--max-line-length 88 --extend-ignore E203"
