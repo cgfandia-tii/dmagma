@@ -37,15 +37,15 @@ jobs:
           cd src
           pytest -vvv -m "not celery" --cov backend --cov-report=xml
 
-      - uses: codecov/codecov-action@v3
-        with:
-          directory: src
-          verbose: true
-
       - name: Test tasks
         run: |
           cd src
           CLEAR_CACHE=1 pytest -vvv -m "celery" --cov backend --cov-report=xml --cov-append
+
+      - uses: codecov/codecov-action@v3
+        with:
+          directory: src
+          verbose: true
 
       - name: Show logs
         if: ${{ failure() }}

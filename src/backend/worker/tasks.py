@@ -5,8 +5,7 @@ from backend.worker import service
 
 
 FUZZING_TASK_NAME = "fuzzing-task"
-BROKER = f"amqp://{config.BROKER_USER}:{config.BROKER_PASS}\
-    @{config.BROKER_HOST}:5672"
+BROKER = f"amqp://{config.BROKER_USER}:{config.BROKER_PASS}@{config.BROKER_HOST}:5672"
 BACKEND = f"redis://{config.REDIS_HOST}:{config.REDIS_PORT}"
 app = Celery("dmagma-fuzz", broker=BROKER, backend=BACKEND)
 app.conf.task_routes = {FUZZING_TASK_NAME: {"queue": config.FUZZING_TASK_QUEUE}}
