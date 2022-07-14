@@ -18,7 +18,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${SHARED_VOLUME}:${SHARED_PATH}
-    command: /bin/sh -c ./run-fuzzing-worker.sh
+    command: /bin/sh -c "./run-fuzzing-worker.sh -l DEBUG"
     depends_on:
       - tasks-broker
       - tasks-result
@@ -34,7 +34,7 @@ services:
       S3_ENDPOINT: http://s3:9000
       S3_ACCESS_KEY: ${S3_ACCESS_KEY}
       S3_SECRET_KEY: ${S3_SECRET_KEY}
-    command: /bin/sh -c ./run-general-worker.sh
+    command: /bin/sh -c "./run-general-worker.sh -l DEBUG"
     depends_on:
       - tasks-broker
       - tasks-result
