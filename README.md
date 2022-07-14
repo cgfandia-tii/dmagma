@@ -6,7 +6,7 @@ Distributed Magma fuzzing benchmark
 
 ## Overview
 ```mermaid
-graph TD;
+flowchart TD;
     GeneralQueue[(General Queue)]
     FuzzingQueue[(Fuzzing Queue)]
     S3[\S3/]
@@ -18,19 +18,12 @@ graph TD;
     fworker-0
     fworker-n
     end
-    Trigger((Trigger)) -- start_campaign --> GeneralQueue
-    GeneralQueue <-- start_campaign,reduce --> gworker-0
-    GeneralQueue <-- start_campaign,reduce --> gworker-n
-    gworker-0 -- fuzzing-task --> FuzzingQueue
-    gworker-n -- fuzzing-task --> FuzzingQueue
-    FuzzingQueue -- fuzzing-task --> fworker-0
-    FuzzingQueue -- fuzzing-task --> fworker-n
-    fworker-0 -- tar --> S3
-    fworker-n -- tar --> S3
-    gworker-0 <-- tar,json --> S3
-    gworker-n <-- tar,json --> S3
+    Trigger((Trigger))-. start_campaign .->GeneralQueue
+    GeneralQueue-. start_campaign,reduce .-gworker-0 & gworker-n-. fuzzing-task .->FuzzingQueue
+    FuzzingQueue-. fuzzing-task .->fworker-0 & fworker-n-- tar -->S3
+    gworker-0 & gworker-n<-- tar,json -->S3
 ```
-> ⚠️ There have to be only one fuzzing worker per VM
+> ⚠️ There has to be only one fuzzing worker per VM
 
 ## Development
 ### Setup
