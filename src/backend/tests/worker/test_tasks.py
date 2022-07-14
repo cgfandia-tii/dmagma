@@ -6,7 +6,7 @@ from backend.worker import tasks
 @pytest.mark.celery
 class TestTasks:
     def test_fuzz(self, campaign_id, fuzzer, target, program, tmp_path):
-        args = [campaign_id, fuzzer, target, program, 1, '10s']
+        args = [campaign_id, fuzzer, target, program, 1, "10s"]
         task = tasks.fuzz.apply_async(args=args)
         report = task.get()
         assert report
