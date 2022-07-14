@@ -4,19 +4,24 @@ from backend import config, storage, schema
 from backend.worker import service
 
 
-FUZZING_TASK_NAME = 'fuzzing-task'
-BROKER = f'amqp://{config.BROKER_USER}:{config.BROKER_PASS}\
-    @{config.BROKER_HOST}:5672'
-BACKEND = f'redis://{config.REDIS_HOST}:{config.REDIS_PORT}'
-app = Celery('dmagma-fuzz', broker=BROKER, backend=BACKEND)
-app.conf.task_routes = {
-    FUZZING_TASK_NAME: {'queue': config.FUZZING_TASK_QUEUE}
-}
+FUZZING_TASK_NAME = "fuzzing-task"
+BROKER = f"amqp://{config.BROKER_USER}:{config.BROKER_PASS}\
+    @{config.BROKER_HOST}:5672"
+BACKEND = f"redis://{config.REDIS_HOST}:{config.REDIS_PORT}"
+app = Celery("dmagma-fuzz", broker=BROKER, backend=BACKEND)
+app.conf.task_routes = {FUZZING_TASK_NAME: {"queue": config.FUZZING_TASK_QUEUE}}
 
 
 @app.task(bind=True, name=FUZZING_TASK_NAME)
-def fuzz(self, campaign_id: str, fuzzer: str, target: str, program: str,
-         poll: int = 5, timeout: str = '1m'):
+def fuzz(
+    self,
+    campaign_id: str,
+    fuzzer: str,
+    target: str,
+    program: str,
+    poll: int = 5,
+    timeout: str = "1m",
+):
     """
     Fuzzing task which have to be executed solely on the VM without neighbours
 
@@ -33,11 +38,21 @@ def fuzz(self, campaign_id: str, fuzzer: str, target: str, program: str,
     pipeline_id = self.request.id
     if not pipeline_id:
         raise service.WorkerException(
-            'Fuzzing pipeline id is undefined. Running locally?')
+            "Fuzzing pipeline id is undefined. Running locally?"
+        )
     workdir, shared = service.get_workdir_and_shared()
-    report = service.run_fuzz_pipeline(campaign_id, pipeline_id, fuzzer,
-                                       target, program, shared, workdir,
-                                       poll, timeout, storage_in)
+    report = service.run_fuzz_pipeline(
+        campaign_id,
+        pipeline_id,
+        fuzzer,
+        target,
+        program,
+        shared,
+        workdir,
+        poll,
+        timeout,
+        storage_in,
+    )
     return report
 
 
@@ -62,9 +77,16 @@ def start_campaign(campaign: dict) -> str:
     for fuzzer in campaign.fuzzers:
         for target in fuzzer.targets:
             for program in target.programs:
-                args = (campaign_id, fuzzer.name, target.name, program.name,
-                        campaign.poll, f'{campaign.timeout}s')
+                args = (
+                    campaign_id,
+                    fuzzer.name,
+                    target.name,
+                    program.name,
+                    campaign.poll,
+                    f"{campaign.timeout}s",
+                )
                 fuzzing_pipelines.append(args)
-    task = chord((fuzz.s(*args) for args in fuzzing_pipelines),
-                 reduce.si(campaign_id)).apply_async()
+    task = chord(
+        (fuzz.s(*args) for args in fuzzing_pipelines), reduce.si(campaign_id)
+    ).apply_async()
     return task.id
