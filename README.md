@@ -85,4 +85,4 @@ Test the celery tasks:
     ```
 ### TODO
 - [ ] API
-- [ ] Remove depency from the same docker volume of the fuzzing workers
+- [ ] Remove dependency from the same docker volume of the fuzzing workers
