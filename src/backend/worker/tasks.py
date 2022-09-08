@@ -39,7 +39,7 @@ def fuzz(
         raise service.WorkerException(
             "Fuzzing pipeline id is undefined. Running locally?"
         )
-    workdir, shared = service.get_workdir_and_shared()
+    workdir, shared = service.get_workdir_and_shared(pipeline_id)
     report = service.run_fuzz_pipeline(
         campaign_id,
         pipeline_id,

@@ -43,23 +43,33 @@ def build(fuzzer: str, target: str):
 
 
 def get_workdir_and_shared(
+    pipeline_id: str,
     tmp_workdir: pathlib.Path = None,
 ) -> Tuple[pathlib.Path, str]:
     if is_docker() or not tmp_workdir:
-        workdir = pathlib.Path(config.SHARED_PATH)
+        workdir = pathlib.Path(config.SHARED_PATH) / pipeline_id
         if not workdir.exists():
             logger.warning(f'Shared workdir "{workdir}" does not exist, creating...')
             workdir.mkdir(parents=True, exist_ok=True)
         shared = config.SHARED_VOLUME
     else:
-        workdir = tmp_workdir
-        shared = workdir.absolute()
+        workdir = tmp_workdir / pipeline_id
+        workdir.mkdir(parents=True, exist_ok=True)
+        shared = tmp_workdir.absolute()
     return workdir, shared
 
 
-def start(fuzzer: str, target: str, program: str, shared: str, poll: int, timeout: str):
-    cmd = f"FUZZER={fuzzer} TARGET={target} PROGRAM={program} \
-        SHARED={shared} POLL={poll} TIMEOUT={timeout} ./start.sh"
+def start(
+    pipeline_id: str,
+    fuzzer: str,
+    target: str,
+    program: str,
+    shared: str,
+    poll: int,
+    timeout: str,
+):
+    cmd = f"PIPELINE_ID={pipeline_id} FUZZER={fuzzer} TARGET={target} \
+        PROGRAM={program} SHARED={shared} POLL={poll} TIMEOUT={timeout} ./start.sh"
     shell_wrapper(cmd, CAPTAIN_PATH, "Fuzzing has been started...")
 
 
@@ -101,7 +111,7 @@ def run_fuzz_pipeline(
     """
     cleanup_folder(workdir)
     build(fuzzer, target)
-    start(fuzzer, target, program, shared, poll, timeout)
+    start(pipeline_id, fuzzer, target, program, shared, poll, timeout)
     with tempfile.TemporaryDirectory(pipeline_id, campaign_id) as tmp_dir:
         tar = pack(workdir, pathlib.Path(tmp_dir))
         name = tar.name

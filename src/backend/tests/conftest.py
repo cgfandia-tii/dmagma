@@ -1,6 +1,7 @@
-import pytest
-
 from os import getenv
+from typing import Sequence
+
+import pytest
 
 from backend import schema
 
@@ -44,12 +45,20 @@ def campaign_id() -> str:
 
 
 @pytest.fixture
+def supported_fuzzers() -> Sequence[str]:
+    return ["symcc_afl", "symsan"]
+
+
+@pytest.fixture
 def campaign(
-    campaign_id, fuzzer, target, target_2, program, program_2
+    campaign_id, supported_fuzzers, target, target_2, program, program_2
 ) -> schema.Campaign:
     program = schema.Program(name=program)
     program_2 = schema.Program(name=program_2)
     target = schema.Target(name=target, programs=[program])
     target_2 = schema.Target(name=target_2, programs=[program_2])
-    fuzzers = [schema.Fuzzer(name=fuzzer, targets=[target, target_2])]
-    return schema.Campaign(id=campaign_id, poll=1, timeout=10, fuzzers=fuzzers)
+    fuzzers = [
+        schema.Fuzzer(name=fuzzer, targets=[target, target_2])
+        for fuzzer in supported_fuzzers
+    ]
+    return schema.Campaign(id=campaign_id, poll=1, timeout=15, fuzzers=fuzzers)

@@ -1,3 +1,4 @@
+from genericpath import exists
 import logging
 import pathlib
 import tarfile
@@ -48,13 +49,14 @@ def fuzzer_image(fuzzer, target) -> str:
 
 @pytest.fixture
 def fuzzer_results(
-    fuzzer_image, fuzzer, target, program
+    fuzzer_image, pipeline_id, fuzzer, target, program
 ) -> Callable[[pathlib.Path], pathlib.Path]:
     def dummy(results_dir: pathlib.Path) -> pathlib.Path:
-        workdir, shared = service.get_workdir_and_shared(results_dir)
+        p_id = next(pipeline_id())
+        workdir, shared = service.get_workdir_and_shared(p_id, results_dir)
         utils.cleanup_folder(workdir)
-        service.start(fuzzer, target, program, shared, POLL, TIMEOUT)
-        return shared
+        service.start(p_id, fuzzer, target, program, shared, POLL, TIMEOUT)
+        return workdir
 
     yield dummy
 
@@ -81,7 +83,7 @@ def fuzz_pipeline(
 ) -> Callable[[str, str, str, str], str]:
     def dummy(pipeline_id: str, fuzzer: str, target: str, program: str):
         workdir, shared = service.get_workdir_and_shared(
-            tmp_path_factory.mktemp(f"workdir-{pipeline_id}")
+            pipeline_id, tmp_path_factory.mktemp(f"workdir-{pipeline_id}")
         )
         return service.run_fuzz_pipeline(
             campaign_id,
@@ -124,10 +126,13 @@ def test_pack(fuzzer_results, tmp_path_factory):
 def test_run_fuzz_pipeline(
     results_storage, campaign_id, pipeline_id, fuzzer, target, program, tmp_path_factory
 ):
-    workdir, shared = service.get_workdir_and_shared(tmp_path_factory.mktemp("workdir"))
+    p_id = next(pipeline_id())
+    workdir, shared = service.get_workdir_and_shared(
+        p_id, tmp_path_factory.mktemp("workdir")
+    )
     tar = service.run_fuzz_pipeline(
         campaign_id,
-        next(pipeline_id()),
+        p_id,
         fuzzer,
         target,
         program,
