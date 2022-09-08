@@ -46,7 +46,7 @@ def campaign_id() -> str:
 
 @pytest.fixture
 def supported_fuzzers() -> Sequence[str]:
-    return ["symcc_afl", "symsan"]
+    return ["libfuzzer"]
 
 
 @pytest.fixture
